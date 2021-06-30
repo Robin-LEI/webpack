@@ -17,12 +17,16 @@ output: {
 }
 ```
 
+# module 模块
+1. 包含两个属性rules:[]，plugins: []
+
 # __dirname
 1. 当前文件所在的绝对路径目录
 
 # loader 加载器
 1. webpack本身只能理解js和json
 2. loader让webpack可以处理其它类型的文件
+3. loader本质上是一个函数
 
 # resolve(a, b)和join(a, b)的区别
 1. resolve拼接出绝对路径，也就是说会把相对路径转成绝对路径
@@ -38,6 +42,13 @@ output: {
 1. `build: 'webpack'`，执行`npm run build`的时候，`webpack`会先去找`webpack.config.js`这个配置文件，这个是可以修改的，比如 `build: webpack --config webpack.config2.js`，在打包的时候，会去找`webpack.config2.js`这个文件
 
 # 常用的loader
+1. `raw-loader`，解析txt文件
+```js
+{
+  test: /\.txt$/,
+  loader: 'raw-loader' // 或者 use: 'raw-loader'
+}
+```
 
 # 常用的plugin
 

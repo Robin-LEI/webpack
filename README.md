@@ -26,7 +26,7 @@ output: {
 # loader 加载器
 1. webpack本身只能理解js和json
 2. loader让webpack可以处理其它类型的文件
-3. loader本质上是一个函数
+3. loader本质上是一个函数，接受源文件，返回一个js代码
 
 # resolve(a, b)和join(a, b)的区别
 1. resolve拼接出绝对路径，也就是说会把相对路径转成绝对路径

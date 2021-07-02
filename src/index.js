@@ -1,3 +1,2 @@
-let title = require('./title.txt')
-
-document.write(title.default)
+let sum = (a, b) => a + b
+console.log(sum(1, 2))

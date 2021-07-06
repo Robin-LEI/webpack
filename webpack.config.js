@@ -2,6 +2,7 @@ const { resolve } = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 
 module.exports = {
   mode: 'development',
@@ -10,11 +11,25 @@ module.exports = {
     path: resolve(__dirname, 'dist'),
     filename: 'main.js'
   },
+  devServer: {
+    port: 9000,
+    open: true,
+    host: 'localhost',
+    before(app) {
+      app.get('/api/user', (req, res) => {
+        res.json({name: 'xiaoli'})
+      })
+    }
+  },
   module: {
     rules: [
       {
         test: /\.txt$/,
         loader: 'raw-loader'
+      },
+      {
+        test: /\.css$/,
+        use: [MiniCssExtractPlugin.loader, 'css-loader']
       }
     ]
   },
@@ -38,6 +53,9 @@ module.exports = {
     }),
     new CleanWebpackPlugin({
       cleanOnceBeforeBuildPatterns: ['**/*'] // 清空所有
+    }),
+    new MiniCssExtractPlugin({
+      filename: '[name].css'
     })
   ]
 }

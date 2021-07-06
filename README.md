@@ -223,6 +223,62 @@ watchOption: {
 ```
 
 # 代理
+```js
+// 第一种，在devServer中配置proxy选项
+devServer: {
+  port: 9000,
+  open: true,
+  host: 'localhost',
+  // create-react-app 支持把代理写在package.json中
+  proxy: {
+    '/api': {
+      target: 'http://localhost:9001',
+      changeOrigin: true,
+      pathRewrite: {
+        '^/api': ''
+      }
+    }
+  }
+}
+
+// 第二种，也是在derServer中进入配置，使用before属性，只不过不用单独写一套后端服务用来mock
+derServer: {
+  port: 9000,
+  open: true,
+  host: 'localhost',
+  // webpack-dev-server就是一个express服务器
+  // 这里不是新启动了一个服务器，而是在原来老的9000端口的服务器新添加了一个路由
+  before(app) {
+    app.get('/api/user', (req, res) => {
+      res.json({name: 'xiaoli'})
+    })
+  }
+}
+```
+
+# 中间件
+- webpack有两种用法
+  1. webpack-dev-server
+  2. webpack-dev-middleware
+- 如果你已经有一个express的服务器，想要添加打包的功能就可以使用中间件
+
+```js
+let express = require('express')
+let app = express()
+
+const webpack = require('webpack')
+const webpackOptions = require('webpack.config')
+const WebpackDevMiddleware = require('webpack-dev-middleware')
+webpackOptions.mode = 'development'
+// compiler 是webpack工作的主要对象
+const compiler = webpack(webpackOptions)
+// WebpackDevMiddleware会返回一个express的中间件
+// 1. 会启动webpack的编译，产出main.hash.js
+// 2. 会返回一个中间件，当接受到客户端请求这些产出文件的请求时，把内容返回
+app.use(WebpackDevMiddleware(compiler, {}))
+
+app.listen(9000)
+```
 
 
 # 常用的loader
@@ -233,11 +289,24 @@ watchOption: {
   loader: 'raw-loader' // 或者 use: 'raw-loader'
 }
 ```
+2. style-loader 把css source生成脚本插入到head，使用时需要安装 npm i style-loader -S
+```js
+function loader(cssSource) {
+  return `
+    let style = document.createElement('style')
+    style.innerHTML = ${cssSource}
+    document.head.appendChild(style)
+  `
+}
+module.exports = loader
+```
+3. css-loader 解析css文件中用到的import和url语法，npm i css-loader -S
 
 # 常用的plugin
 1. `html-webpack-plugin` 指定模板，往里面插入打包后的资源
 2. `copy-webpack-plugin` 将单个文件或者整个目录拷贝到构建的目录
 3. `clean-webpack-plugin` 每次重新构建的时候，删除output.path目录下面的所有文件及其目录
+4. `mini-css-extract-plugin` 把收集到的所有css都写入到一个文件中
 
 # webpack5和webpack4的区别
 1. 热更新，webpack4叫做 `webpack-dev-serve`，webpack5叫做 `webpack serve`
@@ -271,29 +340,46 @@ module.exports = {
 
 # webpack.config.js
 ```js
+const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 module.exports = {
-  mode: '',
-  entry: '',
+  mode: 'development',
+  entry: {
+    main: './src/index.js'
+  },
   output: {
-    path: '',
+    path: path.resolve(__dirname, 'dist'),
     filename: '',
     publicPath: '/'
   },
   watch: true,
-  watchOption: {},
+  watchOption: {
+    ignored: /node_modules/, 
+    aggregateTimeout: 600, 
+    poll: 1000
+  },
   devServer: {
     contentBase: '',
-    port,
-    open,
-    writeToDisk,
-    compress,
-    publicPath
+    port: 9000,
+    open: true,
+    writeToDisk: false,
+    compress: true,
+    publicPath: '/'
   },
   module: {
-    rules: []
+    rules: [
+      {
+        test: /\.txt$/,
+        loader: 'raw-loader'
+      },
+      {
+        test: /\.css$/,
+        use: [MiniCssExtractPlugin.loader, 'css-loader']
+      }
+    ]
   },
   plugins: [
     new HtmlWebpackPlugin({
@@ -309,6 +395,9 @@ module.exports = {
     }),
     new CleanWebpackPlugin({
       cleanOnceBeforeBuildPatterns: ['**/*'] // 清空所有
+    }),
+    new MiniCssExtractPlugin({
+      filename: '[name].css'
     })
   ]
 }

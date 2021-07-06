@@ -207,6 +207,23 @@ document.body.appendChild(image)
 }
 ```
 
+# watch 实时编译，及时更新dist目录
+```js
+// 第一种，在webpack.config.js中开启watch监视
+watch: true,
+watchOption: {
+  ignored: /node_modules/,
+  aggregateTimeout: 600, // 监听到更改，延迟600ms再去重新编译
+  poll: 1000 // 每一秒检查一次
+}
+// 第二种，在package.json配置编译脚本的地方开启watch监视
+"scripts": {
+  "build": "webpack --watch"
+}
+```
+
+# 代理
+
 
 # 常用的loader
 1. `raw-loader`，解析txt文件
@@ -219,6 +236,8 @@ document.body.appendChild(image)
 
 # 常用的plugin
 1. `html-webpack-plugin` 指定模板，往里面插入打包后的资源
+2. `copy-webpack-plugin` 将单个文件或者整个目录拷贝到构建的目录
+3. `clean-webpack-plugin` 每次重新构建的时候，删除output.path目录下面的所有文件及其目录
 
 # webpack5和webpack4的区别
 1. 热更新，webpack4叫做 `webpack-dev-serve`，webpack5叫做 `webpack serve`
@@ -233,6 +252,8 @@ module.exports = {
     filename: '',
     publicPath: '/'
   },
+  watch: true,
+  watchOption: {},
   devServer: {
     contentBase: '',
     port,
@@ -245,5 +266,50 @@ module.exports = {
     rules: []
   },
   plugins: []
+}
+```
+
+# webpack.config.js
+```js
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+module.exports = {
+  mode: '',
+  entry: '',
+  output: {
+    path: '',
+    filename: '',
+    publicPath: '/'
+  },
+  watch: true,
+  watchOption: {},
+  devServer: {
+    contentBase: '',
+    port,
+    open,
+    writeToDisk,
+    compress,
+    publicPath
+  },
+  module: {
+    rules: []
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: './src/index.html'
+    }),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, 'src/static'),
+          to: path.resolve(__dirname, 'dist/static')
+        }
+      ]
+    }),
+    new CleanWebpackPlugin({
+      cleanOnceBeforeBuildPatterns: ['**/*'] // 清空所有
+    })
+  ]
 }
 ```

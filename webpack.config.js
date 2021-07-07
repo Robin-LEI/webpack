@@ -1,8 +1,10 @@
 const { resolve } = require('path')
+const glob = require('glob')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const PurgeCSSPlugin = require('purgecss-webpack-plugin')
 
 module.exports = {
   mode: 'development',
@@ -17,7 +19,7 @@ module.exports = {
     host: 'localhost',
     before(app) {
       app.get('/api/user', (req, res) => {
-        res.json({name: 'xiaoli'})
+        res.json({ name: 'xiaoli' })
       })
     }
   },
@@ -29,7 +31,7 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        use: [MiniCssExtractPlugin.loader, 'css-loader']
+        use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader']
       }
     ]
   },
@@ -41,7 +43,11 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: resolve(__dirname, './src/index.html')
+      template: resolve(__dirname, './src/index.html'),
+      // minify: {
+      //   collapseWhitespace: true, // 移除空格
+      //   removeComments: true // 移除注释
+      // }
     }),
     new CopyWebpackPlugin({
       patterns: [
@@ -56,6 +62,9 @@ module.exports = {
     }),
     new MiniCssExtractPlugin({
       filename: '[name].css'
+    }),
+    new PurgeCSSPlugin({
+      paths: glob.sync(`${resolve(__dirname, 'src')}/**/*`, { nodir: true }),
     })
   ]
 }

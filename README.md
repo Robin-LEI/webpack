@@ -280,6 +280,38 @@ app.use(WebpackDevMiddleware(compiler, {}))
 app.listen(9000)
 ```
 
+# webpack5 tree-shaking的弊端
+> webpack5的tree-shaking相较之前的版本已经变得十分智能和强大，但是也会存在一些问题，比如会把一些不该优化的给优化掉，比如css，如何解决呢？
+
+# CSS兼容性
+- 为了浏览器的兼容性，有时候我们要在css前面加上前缀，有-moz-、-o、-ms、-webkit
+- 安装postcss-loader，可以使用postcss处理css
+- 安装postcss-preset-env，把现代的浏览器转化成大多数浏览器可以理解的（已经包含了autoprefixer和browser）
+- `npm install postcss-loader postcss-preset-env -D`
+```js
+// webpack.config.js
+{
+  test: /\.css$/,
+  use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader']
+}
+
+// postcss.config.js
+let postcssPresetEnv = require('postcss-preset-env');
+module.exports = {
+  plugins: [postcssPresetEnv({
+    browsers: 'last 5 version'
+  })]
+}
+
+// 在package.json中也可以配置postcss
+"postcss": {
+  "postcssOptions": {
+    "plugins": [
+      "postcss-preset-env"
+    ]
+  }
+}
+```
 
 # 常用的loader
 1. `raw-loader`，解析txt文件
@@ -300,16 +332,24 @@ function loader(cssSource) {
 }
 module.exports = loader
 ```
-3. css-loader 解析css文件中用到的import和url语法，npm i css-loader -S
+3. `css-loader` 解析css文件中用到的import和url语法，npm i css-loader -S
+4. `url-loader`
+5. `file-loader`
+6. `html-loader`
+7. `less less-loader`
+8. `node-sass sass-loader`
+9. `postcss-loader postcss-preset-env`
 
 # 常用的plugin
 1. `html-webpack-plugin` 指定模板，往里面插入打包后的资源
 2. `copy-webpack-plugin` 将单个文件或者整个目录拷贝到构建的目录
 3. `clean-webpack-plugin` 每次重新构建的时候，删除output.path目录下面的所有文件及其目录
 4. `mini-css-extract-plugin` 把收集到的所有css都写入到一个文件中
+5. `purgecss-webpack-plugin` 把css文件中没有用到的样式在编译打包的时候给删除
 
 # webpack5和webpack4的区别
 1. 热更新，webpack4叫做 `webpack-dev-serve`，webpack5叫做 `webpack serve`
+2. webpack4的tree-shaking很弱，webpack5的tree-shaking功能很强大
 
 # webpack.config.js配置结构
 ```js
@@ -341,10 +381,12 @@ module.exports = {
 # webpack.config.js
 ```js
 const path = require('path')
+const glob = require('glob') // 用来匹配路径的
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const PurgeCSSWebpackPlugin = require('purgecss-webpack-plugin')
 module.exports = {
   mode: 'development',
   entry: {
@@ -377,13 +419,17 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        use: [MiniCssExtractPlugin.loader, 'css-loader']
+        use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader']
       }
     ]
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './src/index.html'
+      template: './src/index.html',
+      minify: {
+        collapseWhitespace: true, // 移除空格
+        removeComments: true // 移除注释
+      }
     }),
     new CopyWebpackPlugin({
       patterns: [
@@ -398,6 +444,10 @@ module.exports = {
     }),
     new MiniCssExtractPlugin({
       filename: '[name].css'
+    }),
+    new PurgeCSSWebpackPlugin({
+      // nodir。如果将其设置为true，则输出中将没有任何目录路径。
+      paths: glob.sync(`${path.resolve(__dirname, 'src')}/**/*`, {nodir: true})
     })
   ]
 }

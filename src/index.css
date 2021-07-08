@@ -1,9 +1,17 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
 body {
   color: red;
 }
 
 #root {
-  background-color: royalblue;
+  width: 750px;
+  height: 750px;
+  border: 1px solid red;
+  box-sizing: border-box;
 }
 
 input::placeholder {

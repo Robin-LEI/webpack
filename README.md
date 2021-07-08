@@ -313,6 +313,103 @@ module.exports = {
 }
 ```
 
+# px自动转成rem
+- 用到一个loader和一个库
+  - px2rem-loader 自动把px转化成rem
+  - lib-flexible 动态设置根元素的fontSize
+```js
+// index.html
+let docElement = document.documentElement;
+function setRemUnit() {
+  // 750 / 75 = 10  1个rem等于多少个px
+  docElement.style.fontSize = docElement.clientWidth / 10 + 'px'
+}
+setRemUnit();
+window.addEventListener('resize', setRemUnit)
+
+// webpack.config.js
+{
+  test: /\.css$/,
+  use: [
+    MiniCssExtractPlugin.loader, 
+    'css-loader', 
+    'postcss-loader', 
+    {
+      loader: 'px2rem-loader', 
+      options: {
+        remUnit: 75, // 此处填写的是设计稿宽度的十分之一，例如设计稿的宽度是750px，1rem=75px
+        remPrecision: 8 // rem保留几位小数
+      }
+    }
+  ]
+}
+
+// main.js，如果引入这个库，我们就不要自己手写动态计算fontSize的代码了
+import 'lib-flexible';
+
+// lib-flexible源代码
+(function flexible (window, document) {
+  var docEl = document.documentElement // 获取到文档元素
+  var dpr = window.devicePixelRatio || 1
+
+  // adjust body font size
+  function setBodyFontSize () {
+    if (document.body) {
+      document.body.style.fontSize = (12 * dpr) + 'px'
+    }
+    else {
+      document.addEventListener('DOMContentLoaded', setBodyFontSize)
+    }
+  }
+  setBodyFontSize();
+
+  // set 1rem = viewWidth / 10
+  function setRemUnit () {
+    var rem = docEl.clientWidth / 10
+    docEl.style.fontSize = rem + 'px'
+  }
+
+  setRemUnit()
+
+  // reset rem unit on page resize
+  window.addEventListener('resize', setRemUnit)
+  window.addEventListener('pageshow', function (e) { // 页面显示事件
+    if (e.persisted) { // 判断是否后退进入
+      setRemUnit()
+    }
+  })
+
+  // detect 0.5px supports
+  // 解决移动端1px的问题
+  if (dpr >= 2) {
+    var fakeBody = document.createElement('body')
+    var testElement = document.createElement('div')
+    testElement.style.border = '.5px solid transparent'
+    fakeBody.appendChild(testElement)
+    docEl.appendChild(fakeBody)
+    if (testElement.offsetHeight === 1) {
+      docEl.classList.add('hairlines')
+    }
+    docEl.removeChild(fakeBody)
+  }
+}(window, document))
+```
+
+# MPA 多入口
+```js
+entry: {
+  page1: './src/pages/page1.js',
+  page2: './src/pages/page2.js'
+}
+
+// html-webpack-plugin 利用chunks也支持多入口打包
+new HtmlWebpackPlugin({
+  template: resolve(__dirname, './src/index.html'),
+  filename: 'page1.html',
+  chunks: ['page1']
+}),
+```
+
 # 常用的loader
 1. `raw-loader`，解析txt文件
 ```js
@@ -440,7 +537,7 @@ module.exports = {
       ]
     }),
     new CleanWebpackPlugin({
-      cleanOnceBeforeBuildPatterns: ['**/*'] // 清空所有
+      cleanOnceBeforeBuildPatterns: ['**/*'] // 清空所有  读 output中的path路径
     }),
     new MiniCssExtractPlugin({
       filename: '[name].css'

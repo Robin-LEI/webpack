@@ -5,9 +5,19 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>webpack5</title>
+  <script>
+    let docElement = document.documentElement;
+    function setRemUnit() {
+      // 750 / 75 = 10  1个rem等于多少个px
+      docElement.style.fontSize = docElement.clientWidth / 10 + 'px'
+    }
+    setRemUnit();
+    window.addEventListener('resize', setRemUnit)
+  </script>
 </head>
 <body>
-  <!-- test -->
-  <input type="text" placeholder="请输入">
+  <div id="root">
+
+  </div>
 </body>
 </html>

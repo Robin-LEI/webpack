@@ -8,7 +8,13 @@ const PurgeCSSPlugin = require('purgecss-webpack-plugin')
 
 module.exports = {
   mode: 'development',
-  entry: './src/index.js',
+  entry: {
+    main: './src/index.js'
+  },
+  // entry: {
+  //   page1: './src/pages/page1.js',
+  //   page2: './src/pages/page2.js'
+  // },
   output: {
     path: resolve(__dirname, 'dist'),
     filename: 'main.js'
@@ -31,7 +37,18 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader']
+        use: [
+          MiniCssExtractPlugin.loader, 
+          'css-loader', 
+          'postcss-loader', 
+          {
+            loader: 'px2rem-loader', 
+            options: {
+              remUnit: 75, // 此处填写的是设计稿宽度的十分之一，例如设计稿的宽度是750px，1rem=75px
+              remPrecision: 8 // rem保留几位小数
+            }
+          }
+        ]
       }
     ]
   },
@@ -43,12 +60,18 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: resolve(__dirname, './src/index.html'),
-      // minify: {
-      //   collapseWhitespace: true, // 移除空格
-      //   removeComments: true // 移除注释
-      // }
+      template: resolve(__dirname, './src/index.html')
     }),
+    // new HtmlWebpackPlugin({
+    //   template: resolve(__dirname, './src/index.html'),
+    //   filename: 'page1.html',
+    //   chunks: ['page1']
+    // }),
+    // new HtmlWebpackPlugin({
+    //   template: resolve(__dirname, './src/index.html'),
+    //   filename: 'page2.html',
+    //   chunks: ['page2']
+    // }),
     new CopyWebpackPlugin({
       patterns: [
         {
@@ -57,9 +80,7 @@ module.exports = {
         }
       ]
     }),
-    new CleanWebpackPlugin({
-      cleanOnceBeforeBuildPatterns: ['**/*'] // 清空所有
-    }),
+    new CleanWebpackPlugin(),
     new MiniCssExtractPlugin({
       filename: '[name].css'
     }),

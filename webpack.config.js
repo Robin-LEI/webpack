@@ -5,6 +5,9 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const PurgeCSSPlugin = require('purgecss-webpack-plugin')
+require('dotenv').config()
+
+console.log(666, process.env.NODE_ENV)
 
 module.exports = {
   mode: 'development',

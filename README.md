@@ -410,6 +410,33 @@ new HtmlWebpackPlugin({
 }),
 ```
 
+# webpack-merge
+1. 用来merge webpack的配置项，比如，可以把dev和prod生成各自的配置文件，在不同环境打包的时候，读取不同的配置文件
+2. npm install webpack-merge -D
+```js
+let { merge } = require('webpack-merge');
+const baseConfig = require('./webpack.base');
+const devConfig =
+{
+  module: {
+    rules: [
+      {
+        test: /\.css$/
+      }
+    ]
+  }
+}
+
+console.log(merge(baseConfig, devConfig));
+module.exports = merge(baseConfig, devConfig)
+```
+
+# .env 文件
+1. NODE_ENV=development
+2. 就相当于 给process.env.NODE_ENV 赋值
+3. 需要配合安装 dotenv 使用
+4. `require('dotenv').config()`，如果不设置path，默认去查找项目目录的.env文件
+
 # 常用的loader
 1. `raw-loader`，解析txt文件
 ```js

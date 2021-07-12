@@ -124,7 +124,7 @@ devServer: {
 }
 ```
 
-# 支持img
+# 支持图片img
 1. 在webpack中使用图片有三种方式
 - 直接通过import 和require引入
 ```js
@@ -195,12 +195,38 @@ document.body.appendChild(image)
     loader: 'babel-loader',
     options: {
       preset: [ // 预设是插件的集合，没有预设要写很多插件
-        '@babel/preset-env', // 可以转换js语法
+        // @babel/preset-env 默认不能转化 Promise
+        // 可以采取引入polyfill腻子的方式解决低版本浏览器兼容性的问题
+        // require('@babel/polyfill); 缺点就是打包后的体积过大
+        // '@babel/preset-env', // 可以转换js语法
+        ['@babel/preset-env', {
+          // 按需加载
+          useBuiltIns: "usage", // 按需加载polyfill
+          // useBuiltIns有三种取值，分别是usage、false、entry
+          // 如果是false，表示全部加载引入的polyfill
+          // 如果是entry，需要在入口文件手动添加 import '@babel/polyfill',这里需要指定corejs的版本号，如果是3，需要这样引入：import 'core-js/stable'; import 'regenerator-runtime/runtime'
+          corejs: {
+            version: 3 // 制定corejs的版本号 2或者3 其实就是polyfill
+          },
+          targets: { // 兼容到指定浏览器的指定版本
+            chrome: '60',
+            firefox: '60',
+            ie: '9',
+            safari: '10',
+            edge: '17'
+          }
+          // 这样操作还是体积有点大，最完美的是利用polyfill service
+          // polyfill.io 自动化的polyfill JavaScript服务
+          // <script src="https://polyfill.io/v3/polyfill.min.js"></script>
+        }],
         '@babel/preset-react' // 可以转换react语法
       ],
       plugins: [ // 为啥不把这两个放到预设中，因为不常用
         ['@babel/plugin-proposal-decorators', { legacy: true }], // 把类和对象装饰器编译成ES5 @readonly 叫装饰器
+        // legacy为true，表示使用stage 1语提案，语法提案分为stage 1,2,3,4，stage 1支持@readonly
         ['@babel/plugin-proposal-class-properties', { loose: true }] // 转换静态类属性以及使用属性初始值化语法声明的属性 class Person {@readonly PI = 3.14}
+        // loose为true，会把类的属性编译为 赋值表达式 this.x = 'bar'
+        // loose为false，会把类的属性编译为Object.defineProperty
       ]
     }
   }]
@@ -436,6 +462,11 @@ module.exports = merge(baseConfig, devConfig)
 2. 就相当于 给process.env.NODE_ENV 赋值
 3. 需要配合安装 dotenv 使用
 4. `require('dotenv').config()`，如果不设置path，默认去查找项目目录的.env文件
+
+# path的区别和联系
+- output > path：输出文件夹的绝对路径
+- output > publicPath，打包生成的index.html文件里面引用资源的前缀，如果不写，输出的就是一个文件名，默认为 /，也可以写成线上的CDN地址
+- devServer > publicPath，dist的虚拟目录，表示打包生成的静态文件所在的目录，如果没有设置，会从output的publicPath中获取
 
 # 常用的loader
 1. `raw-loader`，解析txt文件

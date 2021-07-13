@@ -506,7 +506,7 @@ module.exports = {
   }
 }
 ```
-- ;;;; 只保留一个;如何处理
+- ;;;; 只保留一个;如何处理？
 
 
 # 常用的loader
@@ -546,6 +546,7 @@ module.exports = loader
 # webpack5和webpack4的区别
 1. 热更新，webpack4叫做 `webpack-dev-serve`，webpack5叫做 `webpack serve`
 2. webpack4的tree-shaking很弱，webpack5的tree-shaking功能很强大
+3. webpack4在做vue-ssr的时候，配合vue-server-renderer支持自动往html插入客户端的bundle.js文件，webpack5不支持，但是可以借助html-webpack-plugin实现，在打包的时候给html-webpack-plugin增加一个属性，指定打包后的客户端js脚本文件，在html中通过ejs取出这个属性值
 
 # webpack.config.js配置结构
 ```js

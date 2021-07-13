@@ -468,6 +468,47 @@ module.exports = merge(baseConfig, devConfig)
 - output > publicPath，打包生成的index.html文件里面引用资源的前缀，如果不写，输出的就是一个文件名，默认为 /，也可以写成线上的CDN地址
 - devServer > publicPath，dist的虚拟目录，表示打包生成的静态文件所在的目录，如果没有设置，会从output的publicPath中获取
 
+# eslint 代码校验
+- npm install eslint eslint-loader babel-eslint --D
+- 配置文件 .eslintrc.js
+```js
+// webpack.config.js
+{
+  test: /\.jsx?$/,
+  loader: 'eslint-loader',
+  enforce: 'pre', // exforce：强制指定顺序 pre之前，校验编译前的代码，保证顺序
+  options: {
+    fix: true // 启动自动修复
+  },
+  exclude: /node_modules/, // 排除掉那些不校验的文件
+  include: path.resolve(__dirname, 'src') // 只校验src目录下面的文件
+}
+
+// .eslintrc.js
+module.exports = {
+  root: true, // 根配置文件
+  parser:"babel-eslint", // 需要一个解析器把源代码转为抽象语法树
+  //指定解析器选项
+  parserOptions: {
+    sourceType: "module",
+    ecmaVersion: 2015
+  },
+  //指定脚本的运行环境
+  env: {
+    browser: true,
+  },
+  // 启用的规则及其各自的错误级别
+  rules: {
+    "indent": "off",//缩进风格
+    // indent: ['error', 4] 缩进不是4个就报错
+    "quotes":  "off",//引号类型 
+    "no-console": "error",//禁止使用console
+  }
+}
+```
+- ;;;; 只保留一个;如何处理
+
+
 # 常用的loader
 1. `raw-loader`，解析txt文件
 ```js

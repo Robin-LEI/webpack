@@ -507,6 +507,20 @@ module.exports = {
 }
 ```
 - ;;;; 只保留一个;如何处理？
+> 使用airbnb
+
+# sourcemap
+- 编译前的代码和编译后的代码形成一个映射
+- 利用devtool设置sourcemap
+
+devtool有几个选项
+- eval：打包后的代码用eval包裹起来，速度快，可以缓存，但是不会产生.map文件
+- source-map:会产生.map文件，是一个映射文件，包含行和列信息，包含loader的sourcemap（可以映射到最原始的源文件）
+- cheap-source-map：会产生一个.map文件，包含行，不包含列，不包含loader的sourcemap（映射不到最原始的源文件，只能看到babel-loader编译转换后的代码）
+- cheap-module-source-map：会产生一个.map文件，包含loader的sourcemap，包含行的信息
+- inline-source-map：不会生成单独的.map文件，内嵌在打包后的代码里面
+- 开发环境最佳实践：cheap-module-eval-source-map，信息全，速度快
+- 生产环境最佳实践：hidden-source-map，隐藏source-map，这里的隐藏指的是会生成map文件，但是在打包后的文件中不会映射map文件，直接映射会出现代码泄露的风险，需要把map文件单独放到调试服务器上
 
 
 # 常用的loader
@@ -558,6 +572,7 @@ module.exports = {
     filename: '',
     publicPath: '/'
   },
+  devtool,
   watch: true,
   watchOption: {},
   devServer: {
@@ -594,6 +609,7 @@ module.exports = {
     filename: '',
     publicPath: '/'
   },
+  devtool: 'source-map',
   watch: true,
   watchOption: {
     ignored: /node_modules/, 

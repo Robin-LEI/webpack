@@ -522,6 +522,57 @@ devtool有几个选项
 - 开发环境最佳实践：cheap-module-eval-source-map，信息全，速度快
 - 生产环境最佳实践：hidden-source-map，隐藏source-map，这里的隐藏指的是会生成map文件，但是在打包后的文件中不会映射map文件，直接映射会出现代码泄露的风险，需要把map文件单独放到调试服务器上
 
+# 如何打包第三方库
+1. 直接引入，`import _ from 'lodash'`，缺点是比较麻烦，每次都要引入
+2. 插件引入，new webpack.ProvidePlugin，就不要import或者require单独引用了，优点是不需要手工引入，缺点是不能全局使用（指的是在index.html中不能直接通过window访问）
+```js
+// 打包lodash
+new webpack.ProvidePlugin({
+  _: 'lodash'
+})
+```
+
+3. 利用expose-loader，会在window全局上注入
+```js
+rules: [
+  {
+    test: require.resolve('lodash'),
+    loader: 'expose-loader',
+    options: {
+      exposes: {
+        globalName: "_",
+        override: true
+      }
+    }
+  }
+]
+```
+
+4. 通过CDN引入，缺点：需要手工插入CDN脚本，不管你代码中用到没用到，都会引入
+```js
+// 现在模块index.html文件，引入 <script src="https://cdn.bootcdn.net/ajax/libs/lodash.js/4.17.21/lodash.js"></script>
+// 如果我已经通过CDN外链引入了一个 lodash库并且挂载了_变量，这样在引入require('lodash')的时候就不会打包了
+externals: {
+  lodash: '_'
+}
+// index.js使用
+require('lodash')
+```
+
+5. 借助插件html-webpack-externals-plugin，好处是不需要手工引入，而且做到了按需引入
+```js
+HtmlWebpackExternalsPlugin({
+  externals: [
+    {
+      module: 'lodash',
+      entry: 'https://cdn.bootcdn.net/ajax/libs/lodash.js/4.17.21/lodash.js',
+      global: '_'
+    }
+  ]
+})
+```
+
+
 
 # 常用的loader
 1. `raw-loader`，解析txt文件
@@ -549,6 +600,7 @@ module.exports = loader
 7. `less less-loader`
 8. `node-sass sass-loader`
 9. `postcss-loader postcss-preset-env`
+10. `expose-loader`，把一个模块的返回值注册到全局中
 
 # 常用的plugin
 1. `html-webpack-plugin` 指定模板，往里面插入打包后的资源

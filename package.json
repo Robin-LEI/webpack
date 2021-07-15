@@ -13,7 +13,9 @@
   "license": "ISC",
   "dependencies": {
     "css-loader": "^5.2.6",
+    "expose-loader": "^3.0.0",
     "express": "^4.17.1",
+    "lodash": "^4.17.21",
     "style-loader": "^3.0.0",
     "webpack": "^5.41.1",
     "webpack-cli": "^4.7.2"
@@ -23,6 +25,7 @@
     "clean-webpack-plugin": "^4.0.0-alpha.0",
     "copy-webpack-plugin": "^9.0.1",
     "dotenv": "^10.0.0",
+    "html-webpack-externals-plugin": "^3.8.0",
     "html-webpack-plugin": "^5.3.2",
     "lib-flexible": "^0.3.2",
     "mini-css-extract-plugin": "^2.1.0",

@@ -1,2 +1,5 @@
-// import 'lib-flexible';
-import './index.css';
+// require('lodash');
+
+// console.log(_.join(['a', 'b']))
+
+console.log('hello')

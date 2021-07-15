@@ -5,6 +5,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const PurgeCSSPlugin = require('purgecss-webpack-plugin')
+const HtmlWebpackExternalsPlugin = require('html-webpack-externals-plugin');
 require('dotenv').config()
 
 console.log(666, process.env.NODE_ENV)
@@ -32,8 +33,21 @@ module.exports = {
       })
     }
   },
+  // externals: {
+  //   lodash: '_'
+  // },
   module: {
     rules: [
+      // {
+      //   test: require.resolve('lodash'),
+      //   loader: 'expose-loader',
+      //   options: {
+      //     exposes: {
+      //       globalName: "_",
+      //       override: true
+      //     }
+      //   }
+      // },
       {
         test: /\.txt$/,
         loader: 'raw-loader'
@@ -89,6 +103,15 @@ module.exports = {
     }),
     new PurgeCSSPlugin({
       paths: glob.sync(`${resolve(__dirname, 'src')}/**/*`, { nodir: true }),
+    }),
+    new HtmlWebpackExternalsPlugin({
+      externals: [
+        {
+          module: 'lodash',
+          entry: 'https://cdn.bootcdn.net/ajax/libs/lodash.js/4.17.21/lodash.js',
+          global: '_'
+        }
+      ]
     })
   ]
 }

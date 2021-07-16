@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "webpack",
+    "build": "cross-env NODE_ENV=xxx webpack",
     "build-dev": "webpack --mode dev",
     "start": "webpack serve"
   },
@@ -24,6 +24,7 @@
     "autoprefixer": "^10.2.6",
     "clean-webpack-plugin": "^4.0.0-alpha.0",
     "copy-webpack-plugin": "^9.0.1",
+    "cross-env": "^7.0.3",
     "dotenv": "^10.0.0",
     "html-webpack-externals-plugin": "^3.8.0",
     "html-webpack-plugin": "^5.3.2",

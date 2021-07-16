@@ -572,7 +572,32 @@ HtmlWebpackExternalsPlugin({
 })
 ```
 
+# 环境变量
+- 环境变量将会传递给配置文件
+- 可以利用cross-env工具，跨环境的设置变量
+```json
+{
+  "build": "webpack --env=production", // 方式1
+  "build": "set NODE_ENV=development && webpack", // 方式2，这种方式存在兼容性，windows使用set，Mac需要使用export，借助cross-env可以解决
+  "build": "cross-env NODE_ENV=development webpack", // 方式3
+}
+```
+```js
+// webpack.config.js
+// 方式1
+module.exports = (env) => ({
+  // 这里拿到的env是一个对象：env = {development: false}
+  entry,
+  output,
+  ...
+})
 
+// 方式2
+通过 process.env.NODE_ENV 获取
+
+// 方式3
+通过 process.env.NODE_ENV 获取
+```
 
 # 常用的loader
 1. `raw-loader`，解析txt文件

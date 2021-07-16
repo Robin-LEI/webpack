@@ -575,6 +575,27 @@ HtmlWebpackExternalsPlugin({
 # 环境变量
 - 环境变量将会传递给配置文件
 - 可以利用cross-env工具，跨环境的设置变量
+- env和mode不一致，按照哪个变量执行？以mode为准
+- 在浏览器环境中，如何实现生产环境不打印日志，开发环境打印日志
+```js
+// package.json
+{
+  "start": "cross-env NODE_ENV=development webpack serve"
+}
+// webpack.config.js
+plugins: [
+  new webpack.DefinePlugin({
+    DEVELOPMENT: JSON.stringify(process.env.NODE_ENV === 'development'),
+    // 最终经过赋值给全局变量的时候，会对表达式进行计算，所以在浏览器环境中获取VERSION，其值为3
+    VERSION: "1+2"
+  })
+]
+// index.js
+if (DEVELOPMENT) {
+  console.log('DEVELOPMENT)
+}
+```
+
 ```json
 {
   "build": "webpack --env=production", // 方式1
@@ -633,6 +654,8 @@ module.exports = loader
 3. `clean-webpack-plugin` 每次重新构建的时候，删除output.path目录下面的所有文件及其目录
 4. `mini-css-extract-plugin` 把收集到的所有css都写入到一个文件中
 5. `purgecss-webpack-plugin` 把css文件中没有用到的样式在编译打包的时候给删除
+6. new webpack.DefinePlugin，可以用来定义全局变量
+7. html-webpack-externals-plugin
 
 # webpack5和webpack4的区别
 1. 热更新，webpack4叫做 `webpack-dev-serve`，webpack5叫做 `webpack serve`

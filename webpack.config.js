@@ -6,6 +6,7 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const PurgeCSSPlugin = require('purgecss-webpack-plugin')
 const HtmlWebpackExternalsPlugin = require('html-webpack-externals-plugin');
+const webpack = require('webpack');
 require('dotenv').config()
 
 console.log(666, process.env.NODE_ENV)
@@ -112,6 +113,9 @@ module.exports = {
           global: '_'
         }
       ]
+    }),
+    new webpack.DefinePlugin({
+      DEVELOPMENT: JSON.stringify(process.env.NODE_ENV === 'development')
     })
   ]
 }

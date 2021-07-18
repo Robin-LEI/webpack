@@ -468,6 +468,158 @@ module.exports = merge(baseConfig, devConfig)
 - output > publicPath，打包生成的index.html文件里面引用资源的前缀，如果不写，输出的就是一个文件名，默认为 /，也可以写成线上的CDN地址
 - devServer > publicPath，dist的虚拟目录，表示打包生成的静态文件所在的目录，如果没有设置，会从output的publicPath中获取
 
+# eslint 代码校验
+- npm install eslint eslint-loader babel-eslint --D
+- 配置文件 .eslintrc.js
+```js
+// webpack.config.js
+{
+  test: /\.jsx?$/,
+  loader: 'eslint-loader',
+  enforce: 'pre', // exforce：强制指定顺序 pre之前，校验编译前的代码，保证顺序
+  options: {
+    fix: true // 启动自动修复
+  },
+  exclude: /node_modules/, // 排除掉那些不校验的文件
+  include: path.resolve(__dirname, 'src') // 只校验src目录下面的文件
+}
+
+// .eslintrc.js
+module.exports = {
+  root: true, // 根配置文件
+  parser:"babel-eslint", // 需要一个解析器把源代码转为抽象语法树
+  //指定解析器选项
+  parserOptions: {
+    sourceType: "module",
+    ecmaVersion: 2015
+  },
+  //指定脚本的运行环境
+  env: {
+    browser: true,
+  },
+  // 启用的规则及其各自的错误级别
+  rules: {
+    "indent": "off",//缩进风格
+    // indent: ['error', 4] 缩进不是4个就报错
+    "quotes":  "off",//引号类型 
+    "no-console": "error",//禁止使用console
+  }
+}
+```
+- ;;;; 只保留一个;如何处理？
+> 使用airbnb
+
+# sourcemap
+- 编译前的代码和编译后的代码形成一个映射
+- 利用devtool设置sourcemap
+
+devtool有几个选项
+- eval：打包后的代码用eval包裹起来，速度快，可以缓存，但是不会产生.map文件
+- source-map:会产生.map文件，是一个映射文件，包含行和列信息，包含loader的sourcemap（可以映射到最原始的源文件）
+- cheap-source-map：会产生一个.map文件，包含行，不包含列，不包含loader的sourcemap（映射不到最原始的源文件，只能看到babel-loader编译转换后的代码）
+- cheap-module-source-map：会产生一个.map文件，包含loader的sourcemap，包含行的信息
+- inline-source-map：不会生成单独的.map文件，内嵌在打包后的代码里面
+- 开发环境最佳实践：cheap-module-eval-source-map，信息全，速度快
+- 生产环境最佳实践：hidden-source-map，隐藏source-map，这里的隐藏指的是会生成map文件，但是在打包后的文件中不会映射map文件，直接映射会出现代码泄露的风险，需要把map文件单独放到调试服务器上
+
+# 如何打包第三方库
+1. 直接引入，`import _ from 'lodash'`，缺点是比较麻烦，每次都要引入
+2. 插件引入，new webpack.ProvidePlugin，就不要import或者require单独引用了，优点是不需要手工引入，缺点是不能全局使用（指的是在index.html中不能直接通过window访问）
+```js
+// 打包lodash
+new webpack.ProvidePlugin({
+  _: 'lodash'
+})
+```
+
+3. 利用expose-loader，会在window全局上注入
+```js
+rules: [
+  {
+    test: require.resolve('lodash'),
+    loader: 'expose-loader',
+    options: {
+      exposes: {
+        globalName: "_",
+        override: true
+      }
+    }
+  }
+]
+```
+
+4. 通过CDN引入，缺点：需要手工插入CDN脚本，不管你代码中用到没用到，都会引入
+```js
+// 现在模块index.html文件，引入 <script src="https://cdn.bootcdn.net/ajax/libs/lodash.js/4.17.21/lodash.js"></script>
+// 如果我已经通过CDN外链引入了一个 lodash库并且挂载了_变量，这样在引入require('lodash')的时候就不会打包了
+externals: {
+  lodash: '_'
+}
+// index.js使用
+require('lodash')
+```
+
+5. 借助插件html-webpack-externals-plugin，好处是不需要手工引入，而且做到了按需引入
+```js
+HtmlWebpackExternalsPlugin({
+  externals: [
+    {
+      module: 'lodash',
+      entry: 'https://cdn.bootcdn.net/ajax/libs/lodash.js/4.17.21/lodash.js',
+      global: '_'
+    }
+  ]
+})
+```
+
+# 环境变量
+- 环境变量将会传递给配置文件
+- 可以利用cross-env工具，跨环境的设置变量
+- env和mode不一致，按照哪个变量执行？以mode为准
+- 在浏览器环境中，如何实现生产环境不打印日志，开发环境打印日志
+```js
+// package.json
+{
+  "start": "cross-env NODE_ENV=development webpack serve"
+}
+// webpack.config.js
+plugins: [
+  new webpack.DefinePlugin({
+    DEVELOPMENT: JSON.stringify(process.env.NODE_ENV === 'development'),
+    // 最终经过赋值给全局变量的时候，会对表达式进行计算，所以在浏览器环境中获取VERSION，其值为3
+    VERSION: "1+2"
+  })
+]
+// index.js
+if (DEVELOPMENT) {
+  console.log('DEVELOPMENT)
+}
+```
+
+```json
+{
+  "build": "webpack --env=production", // 方式1
+  "build": "set NODE_ENV=development && webpack", // 方式2，这种方式存在兼容性，windows使用set，Mac需要使用export，借助cross-env可以解决
+  "build": "cross-env NODE_ENV=development webpack", // 方式3
+}
+```
+```js
+// webpack.config.js
+// 方式1
+module.exports = (env) => ({
+  // 这里拿到的env是一个对象：env = {development: false}
+  entry,
+  output,
+  ...
+})
+
+// 方式2
+通过 process.env.NODE_ENV 获取
+
+// 方式3
+通过 process.env.NODE_ENV 获取
+```
+
 # 常用的loader
 1. `raw-loader`，解析txt文件
 ```js
@@ -494,6 +646,7 @@ module.exports = loader
 7. `less less-loader`
 8. `node-sass sass-loader`
 9. `postcss-loader postcss-preset-env`
+10. `expose-loader`，把一个模块的返回值注册到全局中
 
 # 常用的plugin
 1. `html-webpack-plugin` 指定模板，往里面插入打包后的资源
@@ -501,10 +654,13 @@ module.exports = loader
 3. `clean-webpack-plugin` 每次重新构建的时候，删除output.path目录下面的所有文件及其目录
 4. `mini-css-extract-plugin` 把收集到的所有css都写入到一个文件中
 5. `purgecss-webpack-plugin` 把css文件中没有用到的样式在编译打包的时候给删除
+6. new webpack.DefinePlugin，可以用来定义全局变量
+7. html-webpack-externals-plugin
 
 # webpack5和webpack4的区别
 1. 热更新，webpack4叫做 `webpack-dev-serve`，webpack5叫做 `webpack serve`
 2. webpack4的tree-shaking很弱，webpack5的tree-shaking功能很强大
+3. webpack4在做vue-ssr的时候，配合vue-server-renderer支持自动往html插入客户端的bundle.js文件，webpack5不支持，但是可以借助html-webpack-plugin实现，在打包的时候给html-webpack-plugin增加一个属性，指定打包后的客户端js脚本文件，在html中通过ejs取出这个属性值
 
 # webpack.config.js配置结构
 ```js
@@ -516,6 +672,7 @@ module.exports = {
     filename: '',
     publicPath: '/'
   },
+  devtool,
   watch: true,
   watchOption: {},
   devServer: {
@@ -552,6 +709,7 @@ module.exports = {
     filename: '',
     publicPath: '/'
   },
+  devtool: 'source-map',
   watch: true,
   watchOption: {
     ignored: /node_modules/, 

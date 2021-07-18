@@ -1,2 +1,3 @@
-// import 'lib-flexible';
-import './index.css';
+if (DEVELOPMENT) {
+  console.log('DEVELOPMENT')
+}
